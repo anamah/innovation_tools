@@ -34,6 +34,8 @@ INSTALLED_APPS = [
     'material',
     'material.frontend',
     'material.admin',
+    'dashboard.apps.DashboardConfig',
+    'innovation.apps.InnovationConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,7 +43,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'innovation.apps.InnovationConfig'
 ]
 
 MIDDLEWARE = [

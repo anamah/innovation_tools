@@ -1,0 +1,86 @@
+html {
+  color: #747e85;
+}
+.dashboard > .row {
+  margin-bottom: 0px; }
+  .dashboard > .row > .col {
+    padding-left: 0.375rem;
+    padding-right: 0.375rem; }
+    .dashboard > .row > .col > .card {
+      margin-bottom: 0.375rem; }
+
+.dashboard .counter-card i.material-icons {
+  font-size: 4.2rem; }
+
+.white-text {
+    color: #747e85;
+}
+
+nav a {
+    color: #747e85;
+}
+
+
+nav {
+  color: #fff;
+  background-color: #d2e5f5;
+  width: 100%;
+  height: 56px;
+  line-height: 56px; }
+  nav.nav-extended {
+    height: auto; }
+    nav.nav-extended .nav-wrapper {
+      min-height: 56px;
+      height: auto; }
+    nav.nav-extended .nav-content {
+      position: relative;
+      line-height: normal; }
+
+/*.sidenav .collapsible-body>ul:not(.collapsible)>li.active, .sidenav.sidenav-fixed .collapsible-body>ul:not(.collapsible)>li.active {*/
+/*    background-color: #d2e5f5;*/
+/*}*/
+
+.sidenav .user-view .circle {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.sidenav li>a {
+    color: #747e85;
+}
+
+.sidenav .collapsible-body>ul:not(.collapsible)>li.active a, .sidenav.sidenav-fixed .collapsible-body>ul:not(.collapsible)>li.active a {
+     color: #747e85;
+    }
+
+
+.sidenav .collapsible-body>ul:not(.collapsible)>li.active, .sidenav.sidenav-fixed .collapsible-body>ul:not(.collapsible)>li.active {
+    background-color: #e6e8ea;
+}
+
+.sidenav .user-view {
+    position: relative;
+    padding: 6px 32px 0;
+    margin-bottom: 8px;
+}
+.btn, .btn-large, .btn-small {
+    background-color: #747e85
+}
+
+.white-text.email{
+    color: #747e85;
+}
+
+.sidenav .collapsible-body>ul:not(.collapsible)>li.active, .sidenav.sidenav-fixed .collapsible-body>ul:not(.collapsible)>li.active {
+    background-color: #d2e5f5;
+}
+.btn, .btn-large, .btn-small {
+    text-decoration: none;
+    color: #fff;
+    background-color: #d2e5f5;
+}
+
+table[data-form-control="datatable"] ~ .dataTables_paginate .paginate_button.current {
+    background-color: #d2e5f5;
+    color: white;
+}
