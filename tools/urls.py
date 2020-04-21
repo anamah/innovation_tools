@@ -17,7 +17,9 @@ from django.contrib import admin
 from django.urls import path
 from django.conf.urls import url, include
 from material.frontend import urls as frontend_urls
+from django.views import generic
 
 urlpatterns = [
+    url('^$', generic.RedirectView.as_view(url='./innovation/'), name="index"),
     url(r'', include(frontend_urls)),
 ]

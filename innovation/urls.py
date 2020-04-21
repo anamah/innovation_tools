@@ -4,7 +4,7 @@ from django.views import generic
 from . import views
 
 urlpatterns = [
-    url('^$', generic.RedirectView.as_view(url='./ocean/'), name="index"),
+    url('^$', generic.RedirectView.as_view(url='./metadata/'), name="index"),
     url('^ocean/', include(views.OceanViewSet().urls)),
     url('^metadata/', include(views.MetaDataViewSet().urls)),
     url('^startdata/', include(views.StartDataViewSet().urls)),
