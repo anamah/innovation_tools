@@ -16,6 +16,11 @@ class MetaDataViewSet(ModelViewSet):
     model = models.Metadata
     list_display = ('research_phase_number', 'research_phases30', 'research_phases7')
 
+class TweetsDataViewSet(ModelViewSet):
+    model = models.Tweets
+    list_display = [field.name for field in model._meta.fields]
+
+
 
 class ToolsAndInnovationsViewSet(ModelViewSet):
     model = models.ToolsAndInnovations

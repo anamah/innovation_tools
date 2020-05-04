@@ -31,3 +31,26 @@ def rowcreate():
                     active_ass=row[21],
                 )
             index += 1
+
+import pandas as pd
+import datetime
+import os
+import glob
+def create_tweets():
+    Tweets.objects.all().delete()
+    os.chdir('/home/mikhail/PycharmProjects/tools/tweets_full/')
+    for file in glob.glob("*.csv"):
+        print(file)
+        f = pd.read_csv(file)
+        for index, row in f.iterrows():
+            tweets = Tweets.objects.create(
+                tweet_dt=datetime.datetime.strptime(row['tweet_dt'], "%Y-%m-%d").date(),
+                topic=row['topic'],
+                username=row['username'],
+                name=row['name'],
+                tweet=row['tweet'],
+                like_count=row['like_count'],
+                reply_count=row['reply_count'],
+                retweet=row['retweet_count'],
+                retweeted=row['retweeted']
+            )

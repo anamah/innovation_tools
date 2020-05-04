@@ -5,7 +5,7 @@ from django.contrib.auth.models import Group
 from django.template.loader import render_to_string
 from innovation.models import ToolsAndInnovations, Metadata
 from .base import Dashboard
-
+import dashboard
 User = get_user_model()
 
 
@@ -86,5 +86,5 @@ def word_cloud(request):
 default_dashboard = Dashboard('Welcome', [
     [users_count, groups_count, staff_count],
     [registration_stats, login_stats],
-    [word_cloud]
-])
+    [word_cloud]]
+)
