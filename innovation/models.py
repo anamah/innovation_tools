@@ -27,6 +27,16 @@ class Metadata(models.Model):
     research_phases30 = models.CharField(max_length=30)
     research_phases7 = models.CharField(max_length=30)
 
+class Tweets(models.Model):
+    tweet_dt = models.DateField()
+    topic = models.CharField(max_length=35)
+    username = models.CharField(max_length=45)
+    name = models.CharField(max_length=45)
+    tweet = models.CharField(max_length=512)
+    like_count = models.IntegerField()
+    reply_count = models.IntegerField()
+    retweet = models.IntegerField()
+    retweeted = models.BooleanField()
 
 
 class ToolsAndInnovations(models.Model):
@@ -49,6 +59,9 @@ class ToolsAndInnovations(models.Model):
     active_pub = models.CharField(max_length=30, help_text="publication / archiving / sharing")
     active_out = models.CharField(max_length=30, help_text="outreach & visibility")
     active_ass = models.CharField(max_length=30, help_text="assessment / metrics (incl. comments, discussion)")
+
+    def __str__(self):
+        return self.name
 
 
 class Recommendation(models.Model):

@@ -7,14 +7,11 @@ from django.utils.translation import ugettext_lazy as _
 
 from . import models
 
-@admin.register(models.Ocean)
-class OceanAdmin(admin.ModelAdmin):
+@admin.register(models.Tweets)
+class TweetAdmin(admin.ModelAdmin):
     icon = '<i class="fa fa-tint"></i>'
     actions = None
-    exclude = ('area', )
-    readonly_fields = ('map', )
-    list_display = ('name', 'area', 'short_description', 'map',)
-    prepopulated_fields = {'slug': ('name', )}
+    list_display =[field.name for field in models.Tweets._meta.fields]
 
     def map(self, ocean):
         if ocean.map_url:

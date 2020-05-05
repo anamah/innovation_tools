@@ -10,6 +10,7 @@ urlpatterns = [
     url('^startdata/', include(views.StartDataViewSet().urls)),
     url('^information/', include(views.ToolsAndInnovationsViewSet().urls)),
     url('^reccomendation/', include(views.RecommendationViewSet().urls), name='reccomendation'),
+    url('^tweets/', include(views.TweetsDataViewSet().urls), name='reccomendation'),
 ]
 
 
