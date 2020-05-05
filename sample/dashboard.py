@@ -5,8 +5,8 @@ from django.contrib.auth.models import Group
 from django.template.loader import render_to_string
 from innovation.models import ToolsAndInnovations, Metadata, Tweets
 import dashboard
-
-
+from functools import partial
+from django.http import Http404
 User = get_user_model()
 
 
@@ -80,78 +80,119 @@ def login_stats(request):
         ]
     })
 
-def most_tweets_service(request):
-    phase = get_params(request)
-    if phase is not None:
-        tools = ToolsAndInnovations.objects.filter(prime_phase_number=phase).values()
-        twitter_accounts = [tool['twitter'].split('/')[-1] for tool in tools if tool['twitter'].startswith('https')]
-        tweets = []
-        for account in twitter_accounts:
-            tw = Tweets.objects.filter(topic__contains=account).values('topic').annotate(dcount=Count('topic'))
-            for t in tw:
-                tweets.append({'topic': t['topic'], 'dcount': t['dcount']})
-    else:
-        tweets = Tweets.objects.values('topic').annotate(dcount=Count('topic'))
+def get_phasenumbers_tweets(phase_number, aggregate_function):
+    tools = ToolsAndInnovations.objects.filter(prime_phase_number=phase_number).values()
+    twitter_accounts = [tool['twitter'].split('/')[-1] for tool in tools if tool['twitter'].startswith('https')]
+    tweets = []
+    for account in twitter_accounts:
+        tw = Tweets.objects.filter(topic__contains=account).values('topic').annotate(count=aggregate_function)
+        for t in tw:
+            tweets.append({'topic': t['topic'], 'count': t['count']})
+    return tweets
 
-    tweets = sorted(tweets, key=lambda tup: int(tup['dcount']))
+def most_tweets_service(request):
+    phase_number, phase = get_params(request)
+    tweets = []
+    title = 'Tweet statistics'
+    aggregate_function = Count('topic')
+    if phase_number is not None:
+        stage = Metadata.objects.get(research_phase_number=phase_number)
+        title = f'Tweets statistics for {stage.research_phases30}'
+        tweets = get_phasenumbers_tweets(phase_number, aggregate_function)
+    elif phase is not None:
+        phases = Metadata.objects.filter(research_phases7=phase).values()
+        if phases:
+            title = f"Tweets statistics for {phases[0]['research_phases7']} stage"
+            research_numbers = [phase['research_phase_number'] for phase in phases]
+            for research_number in research_numbers:
+                tweets.extend(get_phasenumbers_tweets(research_number, aggregate_function))
+    else:
+        tweets = Tweets.objects.values('topic').annotate(count=Count('topic'))
+
+
+    tweets = sorted(tweets, key=lambda tup: int(tup['count']))
     tweets = tweets[-20:]
     return render_to_string('dashboard/stats.html', {
-        'title': 'Tweets statistics',
+        'title': title,
         'stats': [
             {'label': tweet['topic'],
-             'count': tweet['dcount']}
+             'count': tweet['count']}
             for tweet in tweets
         ]
     })
 
 def most_popular_service(request):
-    phase = get_params(request)
-    if phase is not None:
-        tools = ToolsAndInnovations.objects.filter(prime_phase_number=phase).values()
-        twitter_accounts = [tool['twitter'].split('/')[-1] for tool in tools if tool['twitter'].startswith('https')]
-        tweets = []
-        for account in twitter_accounts:
-            tw = Tweets.objects.filter(topic__contains=account).values('topic').annotate(sum=Sum('like_count'))
-            for t in tw:
-                tweets.append({'topic': t['topic'], 'sum': t['sum']})
+    phase_number, phase = get_params(request)
+    aggregate_function = Sum('like_count')
+    tweets = []
+    title = 'Tweets Likes statistics'
+    if phase_number is not None:
+        tweets = get_phasenumbers_tweets(phase_number, aggregate_function)
+        stage = Metadata.objects.get(research_phase_number=phase_number)
+        if stage:
+            title = f'Tweets Likes statistics for {stage.research_phases30}'
+        else:
+            raise Http404
+    elif phase is not None:
+        phases = Metadata.objects.filter(research_phases7=phase).values()
+        if phases:
+            title = f"Tweets Likes statistics for {phases[0]['research_phases7']} stage"
+            research_numbers = [phase['research_phase_number'] for phase in phases]
+            tweets = []
+            for research_number in research_numbers:
+                tweets.extend(get_phasenumbers_tweets(research_number, aggregate_function))
+        else:
+            raise Http404
     else:
-        tweets = Tweets.objects.values('topic').annotate(sum=Sum('like_count'))
-    tweets = sorted(tweets, key=lambda tup: int(tup['sum']))
+        tweets = Tweets.objects.values('topic').annotate(count=aggregate_function)
+    tweets = sorted(tweets, key=lambda tup: int(tup['count']))
     tweets = tweets[-20:]
     return render_to_string('dashboard/stats.html', {
-        'title': 'Tweets Likes statistics',
+        'title': title,
         'stats': [
             {'label': tweet['topic'],
-             'count': tweet['sum']}
+             'count': tweet['count']}
             for tweet in tweets
         ]
     })
 
 def get_params(request):
     request = request.dicts[1]['request']
+    phase_number = request.GET.get('phasenumber')
     phase = request.GET.get('phase')
-    return phase
+    return phase_number, phase
 
 def most_retweet_service(request):
-    phase = get_params(request)
-    if phase is not None:
-        tools = ToolsAndInnovations.objects.filter(prime_phase_number=phase).values()
-        twitter_accounts = [tool['twitter'].split('/')[-1] for tool in tools if tool['twitter'].startswith('https')]
-        tweets = []
-        for account in twitter_accounts:
-            tw = Tweets.objects.filter(topic__contains=account).values('topic').annotate(sum=Sum('retweet'))
-            for t in tw:
-                tweets.append({'topic': t['topic'], 'sum': t['sum']})
+    phase_number, phase = get_params(request)
+    aggregate_function = Sum('retweet')
+    title = f'Tweets Retweet statistics'
+    if phase_number is not None:
+        tweets = get_phasenumbers_tweets(phase_number, aggregate_function)
+        stage = Metadata.objects.get(research_phase_number=phase_number)
+        if stage:
+            title = f'Tweets Retweet statistics for {stage.research_phases30}'
+        else:
+            raise Http404
+    elif phase is not None:
+        phases = Metadata.objects.filter(research_phases7=phase).values()
+        if phases:
+            title = f"Tweets Retweet statistics for {phases[0]['research_phases7']} stage"
+            research_numbers = [phase['research_phase_number'] for phase in phases]
+            tweets = []
+            for research_number in research_numbers:
+                tweets.extend(get_phasenumbers_tweets(research_number, aggregate_function))
+        else:
+            raise Http404
     else:
-        tweets = Tweets.objects.values('topic').annotate(sum=Sum('retweet'))
-    tweets = sorted(tweets, key=lambda tup: int(tup['sum']))
+        tweets = Tweets.objects.values('topic').annotate(count=aggregate_function)
+    tweets = sorted(tweets, key=lambda tup: int(tup['count']))
     tweets = tweets[-20:]
 
     return render_to_string('dashboard/stats.html', {
-        'title': 'Tweets Retweet statistics',
+        'title': title,
         'stats': [
             {'label': tweet['topic'],
-             'count': tweet['sum']}
+             'count': tweet['count']}
             for tweet in tweets
         ]
     })
