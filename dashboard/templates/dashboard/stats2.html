@@ -14,9 +14,9 @@ function chartReadyHandler(id) {
 }
 
 var layoutStr =
-  '<KoolChart backgroundColor="#FFFFFF"  borderStyle="none" fontFamily="Noto Sans">'
+  '<KoolChart backgroundColor="#FFFFFF"  borderStyle="none" fontSize="32" fontFamily="Noto Sans">'
    +'<Options>'
-    +'<Caption text="Changes data every 2 seconds"/>'
+    +'<Caption text="WordCloud"/>'
    +'</Options>'
    +'<WordCloudChart showDataTips="true">'
     +'<series>'
@@ -48,13 +48,12 @@ function changeData(){
  function makeData(){
   var i, n,
    chartData = [],
-   data = ["PRAY","NEW","DO","DESIGN","CONCENTRATE","GREAT","LEAD","MOMENT","LOVE","DO","NEW","PRAY","GREAT","DESIGN","CREATIVE","LOVE","STUNNING","PRAY","BABY","LOVELY","DESIGN","GET","GOOD","NEW","COMMUNICATE","LOVE","NEW",
-            "SUCCESS","LOVELY","LOVE","LEARN","PRAY","LOVE","COOL","DO","LOVE","GORGEOUS","HAPPY","GOAL","STORY","LOVE","STUNNING","COMMUNICATE","PRAY","GREAT","HAVE","LOVE","PEOPLE","MIRACLE","COMMUNICATE","WALK","LOVE","DO","COOL","WALK","PRAY","LIKE","LOVELY","NEW","DESIGN","TEACH","LOVE","DO"];
-
+   data = [{% for item in stats %}'{{ item.word}}',{% endfor %}]
+   weights = [{% for item in stats %}'{{ item.count}}',{% endfor %}]
   for(i = 0, n = data.length ; i < n ; i += 1){
    chartData.push({
     text : data[i],
-    weight : Math.floor(Math.random(10) * 100)
+    weight : weights[i] * 2
    });
   }
   return chartData;
