@@ -8,7 +8,11 @@ import dashboard
 from functools import partial
 from django.http import Http404
 User = get_user_model()
-
+import re
+import collections
+import operator
+import string
+from nltk.corpus import stopwords
 
 def users_count(request):
     return render_to_string('dashboard/counter.html', {
@@ -197,8 +201,57 @@ def most_retweet_service(request):
         ]
     })
 
+def clean_text(text):
+    # remove numbers
+    text_nonum = re.sub(r'\d+', '', text)
+    # remove punctuations and convert characters to lower case
+    text_nopunct = "".join([char.lower() for char in text_nonum if char not in string.punctuation])
+    # substitute multiple whitespace with single whitespace
+    # Also, removes leading and trailing whitespaces
+    text_no_doublespace = re.sub('\s+', ' ', text_nopunct).strip()
+    return text_no_doublespace
+
 def word_cloud(request):
-    return render_to_string('dashboard/stats2.html')
+    phase_number, phase = get_params(request)
+    if phase_number is not None:
+        tools = ToolsAndInnovations.objects.filter(prime_phase_number=phase_number).values()
+        twitter_accounts = [tool['twitter'].split('/')[-1] for tool in tools if tool['twitter'].startswith('https')]
+        tweets = []
+        for account in twitter_accounts:
+            tw = Tweets.objects.filter(topic__contains=account).values('tweet')
+            for t in tw:
+                tweets.append({'tweet': t['tweet']})
+    elif phase is not None:
+        phases = Metadata.objects.filter(research_phases7=phase).values()
+        if phases:
+            research_numbers = [phase['research_phase_number'] for phase in phases]
+            tweets = []
+            for research_number in research_numbers:
+                tools = ToolsAndInnovations.objects.filter(prime_phase_number=research_number).values()
+                twitter_accounts = [tool['twitter'].split('/')[-1] for tool in tools if
+                                    tool['twitter'].startswith('https')]
+                tweets_low = []
+                for account in twitter_accounts:
+                    tw = Tweets.objects.filter(topic__contains=account).values('tweet')
+                    for t in tw:
+                        tweets_low.append({'tweet': t['tweet']})
+                tweets.extend(tweets_low)
+    else:
+        tweets = Tweets.objects.all().values("tweet")
+    all_tokens = [token for tweet in tweets for token in clean_text(tweet['tweet']).split()]
+    counter = collections.Counter(all_tokens)
+    all_tokens = {token: value for token, value in counter.items() if len(token) > 2 and token not in stopwords.words('english')}
+    all_tokens = sorted(all_tokens.items(), key=operator.itemgetter(1), reverse=True)
+    all_tokens = all_tokens[:150]
+    return render_to_string('dashboard/stats2.html',
+    {
+        'stats': [
+            {'word': word[0],
+             'count': word[1]}
+            for word in all_tokens
+        ]
+    }
+                            )
 
 def twitters_count(request):
     return render_to_string('dashboard/counter.html', {
@@ -227,14 +280,12 @@ def twitters_topic_count(request):
 
 dashboard.register('Welcome', [
     [users_count, groups_count, staff_count],
-    [registration_stats, login_stats],
-    [word_cloud]
+    [registration_stats, login_stats]
 ])
 
 
 dashboard.register('Tweets', [
     [twitters_count, twitters_username_count, twitters_topic_count],
     [most_tweets_service, most_popular_service],
-    [most_retweet_service],
-    [word_cloud]]
+    [most_retweet_service, word_cloud]]
 )
