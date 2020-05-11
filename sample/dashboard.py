@@ -252,6 +252,64 @@ def word_cloud(request):
         ]
     }
                             )
+def get_positive_tweets(phase_number, aggregate_function):
+    tools = ToolsAndInnovations.objects.filter(prime_phase_number=phase_number).values()
+    twitter_accounts = [tool['twitter'].split('/')[-1] for tool in tools if tool['twitter'].startswith('https')]
+    tweets = []
+    for account in twitter_accounts:
+        tw = Tweets.objects.filter(topic__contains=account, sentiment='POSITIVE').values('topic').annotate(count=aggregate_function)
+        for t in tw:
+            tweets.append({'topic': t['topic'], 'count': t['count']})
+    return tweets
+
+def most_positive_service(request):
+    phase_number, phase = get_params(request)
+    aggregate_function = Count('sentiment')
+    title = f'Tweets Positive Percent statistics'
+    if phase_number is not None:
+        tweets = get_phasenumbers_tweets(phase_number, aggregate_function)
+        positive_tweets = get_positive_tweets(phase_number, aggregate_function)
+        stage = Metadata.objects.get(research_phase_number=phase_number)
+        if stage:
+            title = f'Tweets Positive Percent statistics for {stage.research_phases30}'
+        else:
+            raise Http404
+    elif phase is not None:
+        phases = Metadata.objects.filter(research_phases7=phase).values()
+        if phases:
+            title = f"Tweets Positive Percent statistics for {phases[0]['research_phases7']} stage"
+            research_numbers = [phase['research_phase_number'] for phase in phases]
+            tweets = []
+            positive_tweets = []
+            for research_number in research_numbers:
+                tweets.extend(get_phasenumbers_tweets(research_number, aggregate_function))
+                positive_tweets.extend(get_positive_tweets(phase_number, aggregate_function))
+        else:
+            raise Http404
+    else:
+        tweets = Tweets.objects.values('topic').annotate(count=aggregate_function)
+        positive_tweets = Tweets.objects.filter(sentiment='POSITIVE').values('topic').annotate(count=aggregate_function)
+    stats = {}
+    for tweet in tweets:
+        if tweet['count'] > 100:
+            stats[tweet['topic']] = {'total':tweet['count']}
+    for tweet in positive_tweets:
+        if stats.get(tweet['topic']) is not None:
+            stats[tweet['topic']]['positive'] = tweet['count']
+    for stat in stats:
+        if stats[stat].get('positive') is None:
+            stats[stat]['positive'] = 0
+        stats[stat]['percent'] = round(stats[stat]['positive']/stats[stat]['total'],2)
+    tweet_statistics = {(key, stats[key]['percent']) for key in stats}
+    tweet_statistics = sorted(tweet_statistics, key=lambda tup: float(tup[1]))
+    return render_to_string('dashboard/stats.html', {
+        'title': title,
+        'stats': [
+            {'label': tweet[0],
+             'count': tweet[1]*100}
+            for tweet in tweet_statistics
+        ]
+    })
 
 def twitters_count(request):
     return render_to_string('dashboard/counter.html', {
@@ -287,5 +345,5 @@ dashboard.register('Welcome', [
 dashboard.register('Tweets', [
     [twitters_count, twitters_username_count, twitters_topic_count],
     [most_tweets_service, most_popular_service],
-    [most_retweet_service, word_cloud]]
+    [most_retweet_service, most_positive_service, ], [word_cloud]]
 )
