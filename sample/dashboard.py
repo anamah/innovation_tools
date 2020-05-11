@@ -237,7 +237,23 @@ def word_cloud(request):
                         tweets_low.append({'tweet': t['tweet']})
                 tweets.extend(tweets_low)
     else:
-        tweets = Tweets.objects.all().values("tweet")
+        tweets = Tweets.objects.filter(sentiment='UNKNOWN')
+        from flair.models import TextClassifier
+        from flair.data import Sentence
+
+        classifier = TextClassifier.load('en-sentiment')
+        for index, tweet in enumerate(tweets):
+            if index % 500 == 0:
+                print(f'Index # {index}')
+            cleanedTweet = tweet.tweet.replace("#", "")
+            sentence = Sentence(cleanedTweet, use_tokenizer=True)
+            classifier.predict(sentence)
+
+            label = sentence.labels[0]
+            tweet.score = round(label.score, 2)
+            tweet.sentiment = label.value
+            tweet.save()
+        print(classifier)
     all_tokens = [token for tweet in tweets for token in clean_text(tweet['tweet']).split()]
     counter = collections.Counter(all_tokens)
     all_tokens = {token: value for token, value in counter.items() if len(token) > 2 and token not in stopwords.words('english')}

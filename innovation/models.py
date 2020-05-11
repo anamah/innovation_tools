@@ -37,6 +37,8 @@ class Tweets(models.Model):
     reply_count = models.IntegerField()
     retweet = models.IntegerField()
     retweeted = models.BooleanField()
+    sentiment = models.CharField(max_length=12, default='UNKNOWN')
+    score = models.FloatField(default=0.0)
 
 
 class ToolsAndInnovations(models.Model):
